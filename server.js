@@ -1,14 +1,16 @@
 
-const { MongoClient } = require('mongodb');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const { resolve } = require('path');
 mongo = require('mongodb').MongoClient;
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-//var latestBusData = {}
+var latestBusData = {}
 let mongoCollectionName = "latestDeviceData";
 let mongoDbName = "test";
-let client = new MongoClient("mongodb://127.0.0.1:27017?directConnection=true&replicaSet=jump-set", { useNewUrlParser: true });
+const uri = "mongodb+srv://yusuf:1234@cluster0.1lo5ouf.mongodb.net/?retryWrites=true&w=majority";
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+//let client = new MongoClient("mongodb://127.0.0.1:27017?directConnection=true&replicaSet=jump-set", { useNewUrlParser: true });
 MongoConnection = function () {
     initConnection()
 };
@@ -35,7 +37,7 @@ const createListener = () => {
         //let busses = Object.keys(busList[system_id]) // get all valid busses
         
         busses.forEach(bus => {
-            let tempData = latestDeviceData[busList[system_id][bus]]
+            let tempData = latestBusData[busList[system_id][bus]]
 
             let conditionCompCode = permissionFilter.hasOwnProperty("comp_code") && permissionFilter.comp_code != null ? permissionFilter.comp_code.includes(tempData.COMP_CODE + "") : true
             let conditionRouteCode = permissionFilter.hasOwnProperty("route_code") && permissionFilter.route_code != null ? permissionFilter.route_code.includes(tempData.ROUTE_CODE) : true
@@ -54,7 +56,7 @@ const createListener = () => {
             let retVal = []
             data.busList.forEach(bus => {
                 socket.join(bus + "_" + data.room) // join room with bus and network id
-                retVal.push(latestDeviceData[busList[bus + "_" + data.room]])
+                retVal.push(latestBusData[busList[bus + "_" + data.room]])
             });
             socket.emit("event", { data: retVal }); //return the latest datas by bus information
             console.log(socket.rooms);
@@ -87,19 +89,19 @@ const sendChanges = (change) => {
     if ("update" == change.operationType) {
         let id = change.documentKey._id.toString();
         let fields = change.updateDescription.updatedFields;
-        if (latestDeviceData[id]) {
-            latestDeviceData[id] = { ...latestDeviceData[id], ...fields } // update the device information
-            let { bus_id } = latestDeviceData[id];
-            io.to(bus_id).emit("change", { change, item: latestDeviceData[id] });
+        if (latestBusData[id]) {
+            latestBusData[id] = { ...latestBusData[id], ...fields } // update the device information
+            let { bus_id } = latestBusData[id];
+            io.emit("change", { change, item: latestBusData[id] });
         }
     } else if (["replace", "insert"].includes(change.operationType)) {
         let { bus_id, _id: id } = change.fullDocument;
-        latestDeviceData[id.toString()] = change.fullDocument; // create or replace a new device with id
-        io.to(bus_id).emit("change", { change, item: latestDeviceData[id.toString()] });
+        latestBusData[id.toString()] = change.fullDocument; // create or replace a new device with id
+        io.to(bus_id).emit("change", { change, item: latestBusData[id.toString()] });
     }
     else if (change.operationType == "delete") {
         let { bus_id, _id: id } = change.documentKey
-        delete latestDeviceData[id.toString()]
+        delete latestBusData[id.toString()]
         io.to(bus_id).emit("change", change);
 
     }
@@ -116,36 +118,38 @@ const getLatestBusData = async () =>
             resolve(result);
         })
     })
-    /*const setArrayToObject = (array) => {
+    const setArrayToObject = (array) => {
         let object = {}
         array.forEach(element => {
             object[element._id.toString()] = element
-            busList[element.SYSTEM_ID] = busList[element.SYSTEM_ID] || {}
-            busList[element.SYSTEM_ID][element.BUS_ID] = element._id.toString()
         });
         return object;
-    }*/
+    }
+    const setDataToObject = (data) => {
+        let object = {}
+            object[data._id.toString()] = data
+        return object;
+    }
 
 async function changeRandomBusData(data){
-    data.forEach(function(element) {
-        element['lat']= between(30,35,5);
-        element['lon']= between(30,35,5);
-        element['speed']= between(10,15,0);
-    /*client.db(mongoDbName).collection(mongoCollectionName).updateOne(
-    {"bus_id":element['bus_id']},
-    {$set:element},
+        data['lat']= between(30,35,5);
+        data['lon']= between(30,35,5);
+        data['speed']= between(10,15,0);
+    client.db(mongoDbName).collection(mongoCollectionName).updateOne(
+    {"bus_id":data['bus_id']},
+    {$set:data},
     {"upsert":true},
     function(err, res) {
       if (err) throw err;
     }   
-  );*/  
-    });
+  ); 
 };
 
 const connectToMongo = async () =>
     new Promise(async (resolve, reject) => {
         await client.connect(function (err, cli) {
             if (err) reject(err);
+            console.log('connected');
             resolve(cli);
         })
     })
@@ -156,6 +160,9 @@ function between(min, max, decimals) {
   }
 MongoConnection();
 setInterval(async ()=>{
-let latestBusData = await getLatestBusData().catch(err => console.error(err));
-await changeRandomBusData(latestBusData);
+latestBusData = await getLatestBusData().catch(err => console.error(err));
+latestBusData=latestBusData[0];
+if(latestBusData!==undefined) await changeRandomBusData(latestBusData);
+latestBusData =setDataToObject(latestBusData);
 },5000)
+
