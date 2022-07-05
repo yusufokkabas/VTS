@@ -6,7 +6,7 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var latestBusData = {}
-let mongoCollectionName = "latestDeviceData";
+let mongoCollectionName = "26008";
 let mongoDbName = "test";
 const uri = "mongodb+srv://yusuf:1234@cluster0.1lo5ouf.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -17,7 +17,7 @@ MongoConnection = function () {
 
 const initConnection = async () => {
     await connectToMongo().catch(err => console.log(err));
-    createWatcher();
+    //createWatcher();
     //console.log(Object.keys(latestRateData).length);
     http.listen(3000, () => console.log('listening on *:3000'));
 }
@@ -107,9 +107,12 @@ const sendChanges = (change) => {
     }
 }
 
-app.get("/mongo", async (req, res) => {
-    let data = await getLatestBusData().catch(err => console.error(err));
-    res.send(data)
+app.get("/test", async (req, res) => {
+    client.db(mongoDbName).collection(mongoCollectionName).find({}).limit(1000).toArray(function (err, result) {
+        if (err) throw(err);
+        res.send(result);
+        //console.log(result);
+    })
 })
 const getLatestBusData = async () =>
     new Promise(async (resolve, reject) => {
@@ -159,10 +162,10 @@ function between(min, max, decimals) {
     return parseFloat(str);
   }
 MongoConnection();
-setInterval(async ()=>{
+/*setInterval(async ()=>{
 latestBusData = await getLatestBusData().catch(err => console.error(err));
 latestBusData=latestBusData[0];
 if(latestBusData!==undefined) await changeRandomBusData(latestBusData);
 latestBusData =setDataToObject(latestBusData);
-},5000)
+},5000)*/
 
