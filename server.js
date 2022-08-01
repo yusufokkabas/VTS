@@ -6,7 +6,7 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var latestBusData = {}
-let mongoCollectionName = "26008";
+let mongoCollectionName = "26007";
 let mongoDbName = "test";
 const uri = "mongodb+srv://yusuf:1234@cluster0.1lo5ouf.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -108,7 +108,14 @@ const sendChanges = (change) => {
 }
 
 app.get("/test", async (req, res) => {
-    client.db(mongoDbName).collection(mongoCollectionName).find({}).limit(1000).toArray(function (err, result) {
+    client.db(mongoDbName).collection(mongoCollectionName).find({"date-time":{$gt:new Date("2022-07-06T07:28:00.000+00:00"),$lt:new Date("2022-07-06T07:28:55.471+00:00")}}).limit(1000).toArray(function (err, result) {
+        if (err) throw(err);
+        res.send(result);
+        //console.log(result);
+    })
+})
+app.get("/t", async (req, res) => {
+    client.db(mongoDbName).collection("26008").find({date_time:{$gt:new Date('2022-07-05T11:55:03.240+00:00')}}).limit(1000).toArray(function (err, result) {
         if (err) throw(err);
         res.send(result);
         //console.log(result);

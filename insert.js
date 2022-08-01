@@ -1,6 +1,6 @@
 
 var busData ={
-    "bus_id": "26008",
+    "bus_id": "26007",
     "date_time": "2022-06-28 13:05:54",
     "event": 0,
     "sub_event": 0,
@@ -27,7 +27,16 @@ var busData ={
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = "mongodb+srv://yusuf:1234@cluster0.1lo5ouf.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+client.db("test").createCollection(
+  busData['bus_id'],{
+    timeseries:{
+      timeField:"date-time",
+      metaField:"busData"
+    }
+  }
+)
 client.connect(err => {
+  console.log('connected');
   const collection = client.db("test").collection(busData['bus_id']);
   for(var i=1;i<=50000;i++){
     var date = new Date();
@@ -35,8 +44,8 @@ client.connect(err => {
     let lon= between(30,35,0);
     let speed= between(10,15,0);
     collection.insertOne({
-    "bus_id": "26008",
-    "date_time": date,
+    "busData":{
+    "bus_id": "26007",
     "event": 0,
     "sub_event": 0,
     "event_description": null,
@@ -58,6 +67,8 @@ client.connect(err => {
     "driver_code": "04793",
     "c1": "26008",
     "c2": "26017"
+    },
+    "date-time":date
     })
   }
   
