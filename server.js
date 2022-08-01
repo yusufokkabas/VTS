@@ -10,7 +10,6 @@ let mongoCollectionName = "26007";
 let mongoDbName = "test";
 const uri = "mongodb+srv://yusuf:1234@cluster0.1lo5ouf.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-//let client = new MongoClient("mongodb://127.0.0.1:27017?directConnection=true&replicaSet=jump-set", { useNewUrlParser: true });
 MongoConnection = function () {
     initConnection()
 };

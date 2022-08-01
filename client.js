@@ -4,9 +4,15 @@
         var socket = io.connect('http://127.0.0.1:3000');
         // Add a connect listener
         socket.on('connect', function (data) {
-            console.log('Connected!');   
+            console.log('Connected!');
+            let nid="004"
+            socket.emit("dataGetter",nid);
+            socket.on("sendAlteredData",(err,data)=>{
+                if(err)throw(err);
+                console.log(data);
+
+            });  
         });
-        
         
         
         socket.on('change', function (socket) {

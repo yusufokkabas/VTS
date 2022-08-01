@@ -10,7 +10,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "csv": "^6.2.0",
     "nodemon": "^2.0.18",
+    "pg": "^8.7.3",
+    "pg-hstore": "^2.3.4",
+    "pg-listen": "^1.7.0",
+    "sequelize": "^6.21.3",
+    "sequelize-cli": "^6.4.1",
     "socket.io-client": "^4.5.1"
   }
 }
