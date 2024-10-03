@@ -40,18 +40,7 @@ const listen_Query ='LISTEN newsaleevent';
 const createListener = () => {
     io.on('connection', async (socket) => {
         console.log('a user connected', socket.id)
-        //const cookie = socket.handshake.headers.cookie;
-        //let token = cookie.split(';').find(c => c.trim().startsWith('access_token=')).split('=')[1];
-        //let { username } = jwt.decode(token);
-        //const system_id = socket.handshake.query["networkid"];
-
-        //let permissionFilter = await getPermissionByUser(username, system_id)
         let data = []
-
-        //if (!system_id || !busList[system_id]) return socket.emit("error", "Make sure if you have valid networkid in query string")
-
-        //let busses = Object.keys(busList[system_id]) // get all valid busses
-        
         busses.forEach(bus => {
             let tempData = latestBusData[busList[system_id][bus]]
 
@@ -123,15 +112,7 @@ const sendChanges = (change) => {
     }
 }
 
-app.get("/test", async (req, res) => {
-    pgClient.query(select_Query,function(err,result){
-        if(err) throw(err);
-        res.send(result);
-        console.log("query completed sucessfully");
-    })
-
-})
-app.get("/t", async (req, res) => {
+app.get("/get-all-bus-data", async (req, res) => {
     let arr = await getLatestBusData();
     res.send(arr);
 })
@@ -172,10 +153,4 @@ function between(min, max, decimals) {
     return parseFloat(str);
   }
 DBConnection();
-/*setInterval(async ()=>{
-latestBusData = await getLatestBusData().catch(err => console.error(err));
-latestBusData=latestBusData[0];
-if(latestBusData!==undefined) await changeRandomBusData(latestBusData);
-//latestBusData =setDataToObject(latestBusData);
-},5000)*/
 
